@@ -1,0 +1,13 @@
+data/*
+!data/ignore_words.txt
+
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
