@@ -1,7 +1,7 @@
 [project]
-name = "story"
+name = "one-sentence-summaries"
 version = "0.1.0"
-description = "Add your description here"
+description = "A subset of book descriptions from https://openlibrary.org"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
