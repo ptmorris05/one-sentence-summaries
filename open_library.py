@@ -117,6 +117,24 @@ def main(
     punctuation: Annotated[
         str, typer.Option(help="Punctuation characters to check against")
     ] = ";-_",
+    separator: Annotated[
+        str,
+        typer.Option(
+            help="Separator used in the Open Library dump file",
+        ),
+    ] = "\t",
+    description_key: Annotated[
+        str,
+        typer.Option(
+            help="Key in the JSON object that contains the description",
+        ),
+    ] = "description",
+    value_key: Annotated[
+        str,
+        typer.Option(
+            help="Key in the JSON object for text values",
+        ),
+    ] = "value",
 ) -> None:
     """Process the Open Library dump and filter descriptions.
 
@@ -130,6 +148,9 @@ def main(
         max_words (int): Maximum number of words allowed.
         max_punctuation (int): Maximum punctuation characters allowed.
         punctuation (str): Punctuation characters to check against.
+        separator (str): Separator used in the Open Library dump file.
+        description_key (str): Key in the JSON object with the description.
+        value_key (str): Key in the JSON object for text values.
     Returns:
         None
     """
@@ -139,14 +160,14 @@ def main(
     print("Processing Open Library works dump...")
 
     for line in file:
-        edition = json.loads(line.split("\t")[-1])
+        edition = json.loads(line.split(separator)[-1])
 
-        if "description" not in edition:
+        if description_key not in edition:
             continue
 
-        desc = edition["description"]
+        desc = edition[description_key]
         if not isinstance(desc, str):
-            desc = desc["value"]
+            desc = desc[value_key]
 
         if not should_keep(
             desc,
