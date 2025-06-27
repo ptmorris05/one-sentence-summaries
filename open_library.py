@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+from typing_extensions import Annotated
 
 
 def load_exclude_words(file_path: Path) -> set[str]:
@@ -80,34 +81,42 @@ def should_keep(
 
 
 def main(
-    open_library_path: Path = typer.Argument(
-        ...,
-        help="Path to the gzipped Open Library works dump file",
-        exists=True,
-        dir_okay=False,
-        readable=True,
-    ),
-    exclude_words_path: Path = typer.Option(
-        "data/exclude_words.txt",
-        help="Path to the file containing words to exclude",
-        exists=True,
-        dir_okay=False,
-        readable=True,
-    ),
-    min_words: int = typer.Option(
-        15, help="Minimum number of words required", min=1
-    ),
-    max_words: int = typer.Option(
-        50, help="Maximum number of words allowed", min=1
-    ),
-    max_punctuation: int = typer.Option(
-        5,
-        help="Maximum punctuation characters allowed",
-        min=0,
-    ),
-    punctuation: str = typer.Option(
-        ";-_", help="Punctuation characters to check against"
-    ),
+    open_library_path: Annotated[
+        Path,
+        typer.Argument(
+            ...,
+            help="Path to the gzipped Open Library works dump file",
+            exists=True,
+            dir_okay=False,
+            readable=True,
+        ),
+    ],
+    exclude_words_path: Annotated[
+        Path,
+        typer.Option(
+            "--exclude-words",
+            help="Path to the file containing words to exclude",
+            exists=True,
+            dir_okay=False,
+            readable=True,
+        ),
+    ] = Path("data/exclude_words.txt"),
+    min_words: Annotated[
+        int, typer.Option(help="Minimum number of words required", min=1)
+    ] = 15,
+    max_words: Annotated[
+        int, typer.Option(help="Maximum number of words allowed", min=1)
+    ] = 50,
+    max_punctuation: Annotated[
+        int,
+        typer.Option(
+            help="Maximum punctuation characters allowed",
+            min=0,
+        ),
+    ] = 5,
+    punctuation: Annotated[
+        str, typer.Option(help="Punctuation characters to check against")
+    ] = ";-_",
 ) -> None:
     """Process the Open Library dump and filter descriptions.
 
