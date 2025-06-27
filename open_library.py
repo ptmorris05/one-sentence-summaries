@@ -8,27 +8,32 @@ word count, punctuation, and exclusion of certain words.
 
 import gzip
 import json
+from pathlib import Path
 from typing import Optional
 
+import typer
 
-def load_exclude_words(file_path: str) -> set[str]:
+
+def load_exclude_words(file_path: Path) -> set[str]:
     """
     Load a list of words to exclude from the descriptions.
     The file should contain one word per line.
 
     Args:
-        file_path (str): Path to the file containing words to exclude.
+        file_path (Path): Path to the file containing words to exclude.
     Returns:
         set[str]: A set of words to exclude.
     Raises:
         FileNotFoundError: If the file does not exist.
     """
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            return [line.strip() for line in f if line.strip()]
+        with file_path.open("r", encoding="utf-8") as f:
+            return set(line.strip() for line in f if line.strip())
     except FileNotFoundError:
-        print(f"Warning: {file_path} not found. No words will be excluded.")
-        return []
+        print(
+            f"Warning: {file_path} not found. Not using word-based exclusion."
+        )
+        return set()
 
 
 def should_keep(
@@ -74,44 +79,58 @@ def should_keep(
     return True
 
 
-def main() -> None:
-    """Main function to process the Open Library dump and filter descriptions.
-    It reads a gzipped file containing Open Library works data,
+def main(
+    open_library_path: Path = typer.Argument(
+        ..., help="Path to the gzipped Open Library works dump file"
+    ),
+    exclude_words_path: Path = typer.Option(
+        "data/exclude_words.txt",
+        help="Path to the file containing words to exclude",
+    ),
+    min_words: int = typer.Option(15, help="Minimum number of words required"),
+    max_words: int = typer.Option(50, help="Maximum number of words allowed"),
+    max_punctuation: int = typer.Option(
+        5, help="Maximum punctuation characters allowed"
+    ),
+    punctuation: str = typer.Option(
+        ";-_", help="Punctuation characters to check against"
+    ),
+) -> None:
+    """Process the Open Library dump and filter descriptions.
+
+    This command reads a gzipped file containing Open Library works data,
     extracts descriptions, and filters them based on specified criteria.
-
-    Args:
-        None
-    Returns:
-        None
     """
-    exclude_words = load_exclude_words("data/ignore_words.txt")
+    exclude_words = load_exclude_words(exclude_words_path)
 
-    file = gzip.open("ol_dump_works_2025-05-31.txt.gz", "rt")
+    file = gzip.open(open_library_path, "rt")
     print("Processing Open Library works dump...")
 
     for line in file:
         edition = json.loads(line.split("\t")[-1])
 
-        if "description" in edition:
-            desc = edition["description"]
-            if not isinstance(desc, str):
-                desc = desc["value"]
+        if "description" not in edition:
+            continue
 
-            if not should_keep(
-                desc,
-                min_words=15,
-                max_words=50,
-                max_punctuation=5,
-                punctuation=";-_",
-                exclude_words=exclude_words,
-            ):
-                continue
+        desc = edition["description"]
+        if not isinstance(desc, str):
+            desc = desc["value"]
 
-            print(desc)
+        if not should_keep(
+            desc,
+            min_words=min_words,
+            max_words=max_words,
+            max_punctuation=max_punctuation,
+            punctuation=punctuation,
+            exclude_words=exclude_words,
+        ):
+            continue
+
+        print(desc)
 
     print("Processing complete.")
     file.close()
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)

@@ -13,5 +13,5 @@ wget https://openlibrary.org/data/ol_dump_works_latest.txt.gz
 # Usage
 
 ```
-python3 open_library.py --open-library-path PATH_TO_DATA_DUMP.txt.gz
+python3 open_library.py PATH_TO_DATA_DUMP.txt.gz
 ```
