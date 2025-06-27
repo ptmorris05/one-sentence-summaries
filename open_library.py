@@ -81,16 +81,29 @@ def should_keep(
 
 def main(
     open_library_path: Path = typer.Argument(
-        ..., help="Path to the gzipped Open Library works dump file"
+        ...,
+        help="Path to the gzipped Open Library works dump file",
+        exists=True,
+        dir_okay=False,
+        readable=True,
     ),
     exclude_words_path: Path = typer.Option(
         "data/exclude_words.txt",
         help="Path to the file containing words to exclude",
+        exists=True,
+        dir_okay=False,
+        readable=True,
     ),
-    min_words: int = typer.Option(15, help="Minimum number of words required"),
-    max_words: int = typer.Option(50, help="Maximum number of words allowed"),
+    min_words: int = typer.Option(
+        15, help="Minimum number of words required", min=1
+    ),
+    max_words: int = typer.Option(
+        50, help="Maximum number of words allowed", min=1
+    ),
     max_punctuation: int = typer.Option(
-        5, help="Maximum punctuation characters allowed"
+        5,
+        help="Maximum punctuation characters allowed",
+        min=0,
     ),
     punctuation: str = typer.Option(
         ";-_", help="Punctuation characters to check against"
@@ -100,6 +113,16 @@ def main(
 
     This command reads a gzipped file containing Open Library works data,
     extracts descriptions, and filters them based on specified criteria.
+
+    Args:
+        open_library_path (Path): The gzipped Open Library works dump file.
+        exclude_words_path (Path): File containing words to exclude.
+        min_words (int): Minimum number of words required.
+        max_words (int): Maximum number of words allowed.
+        max_punctuation (int): Maximum punctuation characters allowed.
+        punctuation (str): Punctuation characters to check against.
+    Returns:
+        None
     """
     exclude_words = load_exclude_words(exclude_words_path)
 
