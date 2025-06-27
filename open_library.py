@@ -75,8 +75,9 @@ def should_keep(
     if len(words) < min_words or len(words) > max_words:
         return False
 
-    if exclude_words and any(word in text for word in set(exclude_words)):
+    if exclude_words and any(word in text for word in exclude_words):
         return False
+
     return True
 
 
@@ -157,7 +158,7 @@ def main(
     exclude_words = load_exclude_words(exclude_words_path)
 
     file = gzip.open(open_library_path, "rt")
-    print("Processing Open Library works dump...")
+    typer.echo("Processing Open Library works dump...")
 
     for line in file:
         edition = json.loads(line.split(separator)[-1])
@@ -179,9 +180,10 @@ def main(
         ):
             continue
 
-        print(desc)
+        typer.echo(desc)
+        typer.echo("-" * 80)
 
-    print("Processing complete.")
+    typer.echo("Processing complete.")
     file.close()
 
 
