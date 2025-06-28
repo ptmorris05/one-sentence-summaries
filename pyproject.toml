@@ -5,7 +5,17 @@ description = "A subset of book descriptions from https://openlibrary.org"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "gcld3>=3.0.13",
     "tqdm>=4.67.1",
     "typer>=0.16.0",
+]
+
+[project.optional-dependencies]
+embedding = [
+    "google-genai>=1.23.0",
+    "numpy>=2.3.1",
+    "python-dotenv>=1.1.1",
+    "scikit-learn>=1.7.0",
+]
+language = [
+    "gcld3>=3.0.13",
 ]
