@@ -11,7 +11,7 @@ https://www.unco.edu/center-enhancement-teaching-learning/pdf/assessment/CAT-KIT
 wget https://raw.githubusercontent.com/ptmorris05/one-sentence-summaries/refs/heads/main/data/one-sentence-summaries.json
 ```
 
-## Setup
+## Generate the dataset
 
 install the protobuf compiler (for cld3 language detection)
 
@@ -28,9 +28,6 @@ python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install .
 ```
-
-
-## Generate the dataset
 
 get the latest works data dump from https://openlibrary.org/developers/dumps
 
