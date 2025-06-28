@@ -9,8 +9,10 @@ https://en.wikipedia.org/wiki/Log_line
 
 ## Download the dataset
 
+https://github.com/ptmorris05/one-sentence-summaries/releases/download/v0.1.0/one-sentence-summaries-en-20000.json
+
 ```
-wget https://raw.githubusercontent.com/ptmorris05/one-sentence-summaries/refs/heads/main/data/one-sentence-summaries-en-20000.json
+wget https://github.com/ptmorris05/one-sentence-summaries/releases/download/v0.1.0/one-sentence-summaries-en-20000.json
 ```
 
 ## Generate the dataset (simple)
