@@ -8,10 +8,13 @@ word count, punctuation, and exclusion of certain words.
 
 import gzip
 import json
+from functools import partial
 from pathlib import Path
 from typing import Optional
 
+import gcld3
 import typer
+from tqdm import tqdm
 from typing_extensions import Annotated
 
 
@@ -44,6 +47,9 @@ def should_keep(
     max_punctuation: int = 5,
     punctuation: str = ";-_",
     exclude_words: Optional[set] = None,
+    detector: Optional[gcld3.NNetLanguageIdentifier] = None,
+    language: Optional[str] = None,
+    min_language_proportion: float = 0.99,
 ) -> bool:
     """
     Determine if a text description should be kept based on various criteria.
@@ -54,10 +60,20 @@ def should_keep(
         max_punctuation (int): Maximum punctuation characters allowed.
         punctuation (str): String of punctuation characters to check against.
         exclude_words (Optional[set]): Set of words that should return False.
+        detector (Optional[gcld3.NNetLanguageIdentifier]): Language detector.
+        language (Optional[str]): Expected language of the text.
+        min_language_proportion (float): Mininum same-language text proportion.
     Returns:
         bool: True if the description should be kept, False otherwise.
     """
-    # todo: language check
+    # language check
+    if detector:
+        result = detector.FindLanguage(text)
+        if (
+            result.language != language
+            or result.proportion < min_language_proportion
+        ):
+            return False
 
     # exclude if more caps than lower
     if sum(1 for c in text if c.isupper()) > sum(
@@ -102,6 +118,15 @@ def main(
             readable=True,
         ),
     ] = Path("data/exclude_words.txt"),
+    dataset_path: Annotated[
+        Path,
+        typer.Option(
+            help="Path to save the filtered descriptions",
+            dir_okay=False,
+            writable=True,
+            resolve_path=True,
+        ),
+    ] = Path("data/one-sentence-summaries.json"),
     min_words: Annotated[
         int, typer.Option(help="Minimum number of words required", min=1)
     ] = 15,
@@ -136,6 +161,27 @@ def main(
             help="Key in the JSON object for text values",
         ),
     ] = "value",
+    language: Annotated[
+        str,
+        typer.Option(
+            help="Cld3 language code for the language to filter by",
+        ),
+    ] = "en",
+    cld3_max_num_bytes: Annotated[
+        int,
+        typer.Option(
+            help="Maximum number of bytes for language detection",
+            min=1,
+        ),
+    ] = 1000,
+    cld3_min_language_proportion: Annotated[
+        float,
+        typer.Option(
+            help="Minimum proportion of same-language text required",
+            min=0.0,
+            max=1.0,
+        ),
+    ] = 0.99,
 ) -> None:
     """Process the Open Library dump and filter descriptions.
 
@@ -145,6 +191,7 @@ def main(
     Args:
         open_library_path (Path): The gzipped Open Library works dump file.
         exclude_words_path (Path): File containing words to exclude.
+        dataset_path (Path): Path to save the filtered descriptions.
         min_words (int): Minimum number of words required.
         max_words (int): Maximum number of words allowed.
         max_punctuation (int): Maximum punctuation characters allowed.
@@ -152,15 +199,35 @@ def main(
         separator (str): Separator used in the Open Library dump file.
         description_key (str): Key in the JSON object with the description.
         value_key (str): Key in the JSON object for text values.
+        language (str): Cld3 language code for the language to filter by.
+        cld3_max_num_bytes (int): Max number of bytes for language detection.
+        cld3_min_language_proportion (float): Minimum proportion of
+        same-language text required.
     Returns:
         None
     """
     exclude_words = load_exclude_words(exclude_words_path)
 
+    should_keep_fn = partial(
+        should_keep,
+        min_words=min_words,
+        max_words=max_words,
+        max_punctuation=max_punctuation,
+        punctuation=punctuation,
+        exclude_words=exclude_words,
+        detector=gcld3.NNetLanguageIdentifier(
+            min_num_bytes=0,
+            max_num_bytes=cld3_max_num_bytes,
+        ),
+        language=language,
+        min_language_proportion=cld3_min_language_proportion,
+    )
+
     file = gzip.open(open_library_path, "rt")
     typer.echo("Processing Open Library works dump...")
 
-    for line in file:
+    descs = []
+    for line in (pbar := tqdm(file)):
         edition = json.loads(line.split(separator)[-1])
 
         if description_key not in edition:
@@ -170,18 +237,21 @@ def main(
         if not isinstance(desc, str):
             desc = desc[value_key]
 
-        if not should_keep(
-            desc,
-            min_words=min_words,
-            max_words=max_words,
-            max_punctuation=max_punctuation,
-            punctuation=punctuation,
-            exclude_words=exclude_words,
-        ):
+        if not should_keep_fn(desc):
             continue
 
-        typer.echo(desc)
-        typer.echo("-" * 80)
+        descs.append(desc)
+        pbar.set_description(f"{len(descs)} included")
+
+        # typer.echo(desc)
+        # typer.echo("-" * 80)
+
+    json.dump(
+        descs,
+        dataset_path.open("w", encoding="utf-8"),
+        ensure_ascii=False,
+        indent=4,
+    )
 
     typer.echo("Processing complete.")
     file.close()
