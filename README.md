@@ -2,7 +2,16 @@
 
 A subset of book descriptions from https://openlibrary.org used to prompt a language model to generate short stories.
 
-### Setup
+Note: summaries are short, not necessarily one sentence.
+https://www.unco.edu/center-enhancement-teaching-learning/pdf/assessment/CAT-KIT.pdf
+
+## Dataset
+
+```
+data/one-sentence-summaries.json
+```
+
+## Setup
 
 install the protobuf compiler (for cld3 language detection)
 
@@ -21,7 +30,7 @@ python3 -m pip install .
 ```
 
 
-### Generate the dataset
+## Generate the dataset
 
 get the latest works data dump from https://openlibrary.org/developers/dumps
 

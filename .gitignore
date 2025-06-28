@@ -1,5 +1,6 @@
 data/*
 !data/exclude_words.txt
+!data/one-sentence-summaries.json
 
 # Python-generated files
 __pycache__/
