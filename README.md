@@ -5,10 +5,10 @@ A subset of book descriptions from https://openlibrary.org used to prompt a lang
 Note: summaries are short, not necessarily one sentence.
 https://www.unco.edu/center-enhancement-teaching-learning/pdf/assessment/CAT-KIT.pdf
 
-## Dataset
+## Download Dataset
 
 ```
-data/one-sentence-summaries.json
+wget https://raw.githubusercontent.com/ptmorris05/one-sentence-summaries/refs/heads/main/data/one-sentence-summaries.json
 ```
 
 ## Setup
